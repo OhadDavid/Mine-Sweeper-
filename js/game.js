@@ -19,49 +19,58 @@ var gGame = {
     secsPassed: 0
 
 }
-
+var gElmodal = document.querySelector('.modal')
 
 var gBoard;
+var gfirstClick=true
 
 function init() {
+    
+    gElmodal.hidden = true
     console.log('hello')
     gBoard = buildBoard()
     renderBoard(gBoard)
-    gGame.isOn = true
 }
 
 function buildBoard() {
-    var SIZE = 4;
+     
     var board = [];
-
-    for (var i = 0; i < SIZE; i++) {
+    for (var i = 0; i < gLevel.SIZE; i++) {
         board.push([]);
-        for (var j = 0; j < SIZE; j++) {
+        for (var j = 0; j < gLevel.SIZE; j++) {
 
             var cell = {
                 MinesCountAround: 4,
                 isShown: false,
                 isMine: false,
                 isMarked: false,
-                images: ['🟪', '🟦', '💣']
+                images: ['🟪', '🚩', '💣']
             }
+
             board[i][j] = cell
 
         }
     }
-    console.table(board);
+    //console.log('gBoardL ', gBoard.length);
+    console.log('randobj', gLevel.MINES);
     var randMinesCells = []
     for (var h = 0; h < gLevel.MINES; h++) {
-        //  randMinesCells.push(getRandomEmptyCell())
+        var random=getRandomEmptyCell()
+        while(h>0&&random===randMinesCells[h-1]){
+           random=getRandomEmptyCell
+        }
+        
+        randMinesCells.push(random)
+        console.log('tytu ',random);
+         board[randMinesCells[h].i][randMinesCells[h].j].isMine = true
+         console.log('randd ', board[randMinesCells[h].i][randMinesCells[h].j]);
     }
-    console.log('randobj', randMinesCells);
-    console.log('randobj', gLevel.MINES);
 
-    board[0][0].isShown = true
-    board[0][0].isMine = true
-    board[3][3].isShown = true
-    board[3][3].isMine = true
-    console.table(board[0][0].isMine);
+    // board[0][0].isShown = true
+    // board[0][0].isMine = true
+    // board[3][3].isShown = true
+    // board[3][3].isMine = true
+    // console.table(board[0][0].isMine);
 
     return board;
 }
@@ -92,16 +101,82 @@ function renderBoard(board) {
     // var eltdStartImage=document.querySelectorAll('td')
     // eltdStartImage.innerText=EMPTY
 }
+function smileyButton() {
+    init()
+    document.querySelector('.smiley').innerHTML = '<img src="images/happysmiley.png" >'
+}
 
 function cellClicked(elCell, cellI, cellJ) {
-  
+    if (gfirstClick){
+        gfirstClick=false
+        gGame.isOn=true
+         if(gBoard[cellI][cellJ.isMine]){
+             randMinesCells.push(getRandomEmptyCell())
+             gBoard[cellI][cellJ].isMine=false
+            
+         }
+    }
+     
     if (gBoard[cellI][cellJ].isMine) {
 
         //model
         gBoard[cellI][cellJ].isShown = true
         //dom
-        elCell.innerText = MINE
+        elCell.innerText = gBoard[cellI][cellJ].images[2]
+        gGame.isOn = false
+        document.querySelector('.smiley').innerHTML = '<img src="images/sadsmiley.png" >'
+
+        gElmodal.querySelector('h2 span').innerText = 'you lose, try again'
+        gElmodal.hidden = false
+    } else {
+        gBoard[cellI][cellI] = true
+        var minesAround = countNeighbors(cellI,cellJ)
+        elCell.innerText = minesAround
+        gGame.shownCount++
+    }
+       if( window.oncontextmenu===true)
+       {
+           gGame.markedCount++
+           elCell.innerText = gBoard[cellI][cellI].images[1]
+
+       }
+       if(gGame.isMarked===gLevel.MINES&&gGame.isShown===gLevel.SIZE**2-gLevel.MINES){
+           gGame.isOn=false
+           gElmodal.querySelector('h2 span').innerText = 'you won:))'
+        gElmodal.hidden = false
+       }
+
+    
+
+}
+
+function countNeighbors(cellI, cellJ) {
+    var neighborsCount = 0;
+    for (var i = cellI - 1; i <= cellI + 1; i++) {
+        if (i < 0 || i >= gBoard.length) continue;
+        for (var j = cellJ - 1; j <= cellJ + 1; j++) {
+            if (i === cellI && j === cellJ) continue;
+            if (j < 0 || j >= gBoard[i].length) continue;
+
+            if (gBoard[i][j].isMine === true) neighborsCount++;
+        }
+    }
+    return neighborsCount;
+}
+
+function getRandomEmptyCell() {
+    var emptyCells = []
+    for (var i = 0; i < gLevel.SIZE; i++) {
+        for (var j = 0; j < gLevel.SIZE; j++) {
+            // if (gBoard[i][j] === EMPTY) {
+            emptyCells.push({ i: i, j: j })
+            //  console.log('emptycells ',emptyCells);
+            //emptyCells.push({ i, j })
+        }
+
     }
 
-
+    var randIdx = getRandomInt(0, emptyCells.length)
+    
+    return emptyCells[randIdx]
 }
