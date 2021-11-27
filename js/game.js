@@ -180,3 +180,4 @@ function getRandomEmptyCell() {
     
     return emptyCells[randIdx]
 }
+//new 20:15
